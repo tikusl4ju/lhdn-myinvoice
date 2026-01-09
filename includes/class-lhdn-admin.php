@@ -1056,6 +1056,7 @@ class LHDN_Admin {
             LHDN_Settings::set('show_tin_badge', isset($data['show_tin_badge']) ? '1' : '0');
             LHDN_Settings::set('show_receipt', isset($data['show_receipt']) ? '1' : '0');
             LHDN_Settings::set('exclude_wallet', isset($data['exclude_wallet']) ? '1' : '0');
+            LHDN_Settings::set('tin_enforce', isset($data['tin_enforce']) ? '1' : '0');
             
             // Save custom order statuses (comma-separated) with validation
             if (isset($data['custom_order_statuses'])) {
@@ -1108,7 +1109,7 @@ class LHDN_Admin {
                 if (in_array($k, $invalid_fields)) continue;
                 
                 // Skip fields that are always saved separately
-                if (in_array($k, ['environment', 'api_host', 'host', 'seller_country', 'ubl_version', 'debug_enabled', 'show_tin_badge', 'show_receipt', 'exclude_wallet', 'custom_order_statuses'])) continue;
+                if (in_array($k, ['environment', 'api_host', 'host', 'seller_country', 'ubl_version', 'debug_enabled', 'show_tin_badge', 'show_receipt', 'exclude_wallet', 'tin_enforce', 'custom_order_statuses'])) continue;
                 
                 // Check if this is a critical setting and if it changed
                 if (in_array($k, $test_relevant_settings)) {
@@ -1179,6 +1180,7 @@ class LHDN_Admin {
             'show_tin_badge'    => 'Show TIN Badge',
             'show_receipt'      => 'Show Receipt',
             'exclude_wallet'    => 'Exclude Wallet',
+            'tin_enforce'       => 'TIN Enforce',
             'custom_order_statuses' => 'Custom Order Statuses',
             'ubl_version'       => 'UBL Version',
             'billing_circle'    => 'Billing Circle',
@@ -1547,6 +1549,15 @@ class LHDN_Admin {
                                                <?php echo checked(LHDN_Settings::get('exclude_wallet', '1'), '1', false); ?>>
                                         Exclude orders with wallet payment method from LHDN submission
                                     </label>
+                                <?php elseif ($key === 'tin_enforce'): ?>
+                                    <label>
+                                        <input type="checkbox"
+                                               name="lhdn[tin_enforce]"
+                                               value="1"
+                                               <?php echo checked(LHDN_Settings::get('tin_enforce', '0'), '1', false); ?>>
+                                        Require valid TIN verification before checkout
+                                    </label>
+                                    <p class="description">When enabled, customers must complete TIN verification in their profile before they can checkout.</p>
                                 <?php elseif ($key === 'custom_order_statuses'): ?>
                                     <textarea name="lhdn[custom_order_statuses]"
                                               rows="3"

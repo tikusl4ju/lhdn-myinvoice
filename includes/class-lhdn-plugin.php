@@ -259,6 +259,7 @@ class LHDN_MyInvoice_Plugin {
         // WooCommerce
         add_action('woocommerce_order_status_completed', [$this->woocommerce, 'submit_from_wc_order'], 10, 1);
         add_action('woocommerce_order_status_processing', [$this->woocommerce, 'submit_from_wc_order_processing'], 10, 1);
+        add_action('woocommerce_checkout_process', [$this->woocommerce, 'validate_tin_on_checkout']);
         
         // Register hooks for custom order statuses (treated like "completed")
         $custom_statuses = LHDN_Settings::get('custom_order_statuses', '');

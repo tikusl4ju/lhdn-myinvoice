@@ -61,6 +61,7 @@ class LHDN_Settings {
             'show_tin_badge' => '1',
             'show_receipt' => '1',
             'exclude_wallet' => '1',
+            'tin_enforce' => '0',
             'custom_order_statuses' => '',
             'environment'   => 'sandbox', // sandbox or production
             'api_host'      => 'https://preprod-api.myinvois.hasil.gov.my',

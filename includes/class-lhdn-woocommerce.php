@@ -361,5 +361,53 @@ class LHDN_WooCommerce {
             echo '<span style="color: #999;">—</span>';
         }
     }
+
+    /**
+     * Validate TIN during checkout
+     * Checks if TIN Enforce is enabled OR if cart total exceeds 10,000
+     * and if user has valid TIN
+     */
+    public function validate_tin_on_checkout() {
+        // Check if TIN Enforce setting is enabled
+        $tin_enforce_enabled = (LHDN_Settings::get('tin_enforce', '0') === '1');
+        
+        // Get cart total (subtotal + taxes + fees)
+        $cart_total = 0;
+        if (function_exists('WC') && WC()->cart && !WC()->cart->is_empty()) {
+            // Get the numeric total value
+            $cart_total = (float) WC()->cart->get_total('');
+        }
+        
+        // Only check if TIN Enforce is enabled OR cart total exceeds 10,000
+        if (!$tin_enforce_enabled && $cart_total <= 10000) {
+            return;
+        }
+
+        // Only check for logged-in users
+        if (!is_user_logged_in()) {
+            return;
+        }
+
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return;
+        }
+
+        // Check if user has valid TIN
+        $tin_validation_status = get_user_meta($user_id, 'lhdn_tin_validation', true);
+        
+        if ($tin_validation_status !== 'valid') {
+            // Choose message based on why enforcement is happening
+            if (!$tin_enforce_enabled && $cart_total > 10000) {
+                // Enforcement due to high cart total
+                $message = __('Your purchase total exceeds 10,000 MYR. You need to complete the TIN verification in your profile before checkout.', 'myinvoice-sync');
+            } else {
+                // Enforcement due to global TIN Enforce setting
+                $message = __('You would need to complete the TIN verification in your profile before checkout.', 'myinvoice-sync');
+            }
+
+            wc_add_notice($message, 'error');
+        }
+    }
 }
 
