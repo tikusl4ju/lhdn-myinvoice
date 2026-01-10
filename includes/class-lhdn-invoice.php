@@ -393,6 +393,12 @@ class LHDN_Invoice {
             LHDN_Logger::log("WC Order #{$order->get_id()}: Phone number missing, using default");
         }
 
+        // Get billing city, fallback to country if city is not available
+        $billing_city = $order->get_billing_city();
+        if (empty($billing_city)) {
+            $billing_city = $order->get_billing_country();
+        }
+
         return $this->submit([
             'invoice_no' => $order->get_order_number(),
             'order_id' => $order->get_id(),
@@ -405,7 +411,7 @@ class LHDN_Invoice {
                 'phone'          => $phone,
                 'email'          => $order->get_billing_email(),
                 'address'    => [
-                        'city'       => $order->get_billing_city(),
+                        'city'       => $billing_city,
                         'postcode'   => $order->get_billing_postcode(),
                         'state_code' => LHDN_Helpers::wc_state_to_lhdn($order->get_billing_state()),
                         'line1'      => trim($order->get_billing_address_1() . ' ' . $order->get_billing_address_2()),
@@ -595,6 +601,12 @@ class LHDN_Invoice {
             LHDN_Logger::log("WC Order #{$order->get_id()} resubmit: Phone number missing, using default");
         }
 
+        // Get billing city, fallback to country if city is not available
+        $billing_city = $order->get_billing_city();
+        if (empty($billing_city)) {
+            $billing_city = $order->get_billing_country();
+        }
+
         return $this->submit([
             'invoice_no' => $ordernum,
             'order_id' => $order->get_id(),
@@ -607,7 +619,7 @@ class LHDN_Invoice {
                 'phone' => $phone,
                 'email' => $order->get_billing_email(),
                 'address' => [
-                    'city'       => $order->get_billing_city(),
+                    'city'       => $billing_city,
                     'postcode'   => $order->get_billing_postcode(),
                     'state_code' => LHDN_Helpers::wc_state_to_lhdn($order->get_billing_state()),
                     'line1'      => trim($order->get_billing_address_1() . ' ' . $order->get_billing_address_2()),

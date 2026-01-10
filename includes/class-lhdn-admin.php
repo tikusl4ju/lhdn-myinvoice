@@ -245,35 +245,38 @@ abstract class LHDN_Base_Invoice_Table extends WP_List_Table {
         }
 
         $input_id = $input_id . '_' . $table_id;
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- GET request for search, no data modification, value is sanitized with esc_attr
-        $search_value = isset($_REQUEST[$search_key]) ? esc_attr(wp_unslash($_REQUEST[$search_key])) : '';
+
+        // Sanitize incoming search value from request (no escaping here)
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET request for search, no data modification
+        $search_value = isset($_REQUEST[$search_key])
+            ? sanitize_text_field(wp_unslash($_REQUEST[$search_key]))
+            : '';
+
+        // Sanitize sorting parameters from request (no escaping here)
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET request for sorting, no data modification
+        $orderby = '';
+        if (!empty($_REQUEST['orderby'])) {
+            $orderby = sanitize_text_field(wp_unslash($_REQUEST['orderby']));
+            echo '<input type="hidden" name="orderby" value="' . esc_attr($orderby) . '" />';
+        }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET request for sorting, no data modification
-        if (!empty($_REQUEST['orderby'])) {
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Value is sanitized with esc_attr and wp_unslash
-            $orderby = esc_attr(wp_unslash($_REQUEST['orderby']));
-            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $orderby is already escaped with esc_attr() above
-            echo '<input type="hidden" name="orderby" value="' . $orderby . '" />';
-        }
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET request for sorting, no data modification
+        $order = '';
         if (!empty($_REQUEST['order'])) {
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Value is sanitized with esc_attr and wp_unslash
-            $order = esc_attr(wp_unslash($_REQUEST['order']));
-            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $order is already escaped with esc_attr() above
-            echo '<input type="hidden" name="order" value="' . $order . '" />';
+            $order_raw = sanitize_text_field(wp_unslash($_REQUEST['order']));
+            $order     = in_array(strtolower($order_raw), ['asc', 'desc'], true) ? strtolower($order_raw) : '';
+            if ($order !== '') {
+                echo '<input type="hidden" name="order" value="' . esc_attr($order) . '" />';
+            }
         }
         ?>
         <form method="get" action="">
             <input type="hidden" name="page" value="myinvoice-sync-invoices">
-            <?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET request for sorting, no data modification ?>
-            <?php if (!empty($_REQUEST['orderby'])): ?>
-                <?php // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Value is sanitized with esc_attr and wp_unslash ?>
-                <input type="hidden" name="orderby" value="<?php echo esc_attr(wp_unslash($_REQUEST['orderby'])); ?>" />
+            <?php if (!empty($orderby)) : ?>
+                <input type="hidden" name="orderby" value="<?php echo esc_attr($orderby); ?>" />
             <?php endif; ?>
-            <?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- GET request for sorting, no data modification ?>
-            <?php if (!empty($_REQUEST['order'])): ?>
-                <?php // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Value is sanitized with esc_attr and wp_unslash ?>
-                <input type="hidden" name="order" value="<?php echo esc_attr(wp_unslash($_REQUEST['order'])); ?>" />
+            <?php if (!empty($order)) : ?>
+                <input type="hidden" name="order" value="<?php echo esc_attr($order); ?>" />
             <?php endif; ?>
             <p class="search-box">
                 <label class="screen-reader-text" for="<?php echo esc_attr($input_id); ?>"><?php echo esc_html($text); ?>:</label>
@@ -1557,6 +1560,7 @@ class LHDN_Admin {
                                                <?php echo checked(LHDN_Settings::get('tin_enforce', '0'), '1', false); ?>>
                                         Require valid TIN verification before checkout
                                     </label>
+                                    <br />
                                     <p class="description">When enabled, customers must complete TIN verification in their profile before they can checkout.</p>
                                 <?php elseif ($key === 'custom_order_statuses'): ?>
                                     <textarea name="lhdn[custom_order_statuses]"
